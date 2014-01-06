@@ -1,0 +1,20 @@
+#media-tab-brightcove #container,
+#media-tab-brightcove_playlist #container {
+  padding: 0;
+}
+
+#media-tab-brightcove #scrollbox,
+#media-tab-brightcove_playlist #scrollbox {
+  height: 400px;
+  overflow: auto;
+  overflow-x: hidden;
+}
+
+#media-tab-brightcove .media-item,
+#media-tab-brightcove_playlist .media-item {
+  height: 130px;
+}
+#media-tab-brightcove ul#media-browser-library-list,
+#media-tab-brightcove_playlist ul#media-browser-library-list {
+  margin: 0px;
+}
