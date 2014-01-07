@@ -187,6 +187,43 @@ function brightcove_media_file_presave($file) {
 }
 
 /**
+ * Implements hook_node_presave().
+ * (needed for media gallery)
+ */
+function brightcove_media_node_presave($node) {
+  global $user;
+  if (isset($node->media_gallery_media[LANGUAGE_NONE])) {
+    foreach ($node->media_gallery_media[LANGUAGE_NONE] as &$file) {
+      if (isset($file['fid']) && strpos($file['fid'], 'v') === 0) {
+        $video_id = substr($file['fid'], 1);
+        $candidates = file_load_multiple(array(),
+                                         array('uri' => "brightcove://{$video_id}"));
+        if (count($candidates)) {
+          $file['fid'] = array_shift($candidates)->fid;
+        }
+        else {
+          $handler = new MediaInternetBrightcoveHandler($video_id);
+          if (!isset($_SESSION['brightcove']["video_just_uploaded_{$user->uid}"])) {
+            $bc = brightcove_initialize();
+            try {
+              $result = $bc->find('find_video_by_id', $video_id);
+              if (count($result)) {
+                $_SESSION['brightcove']["selected_video_{$user->uid}"] = (object)$result;
+              }
+            }
+            catch (Exception $e) {
+              watchdog('brightcove', 'Retrieving media list failed.', array(),
+                       WATCHDOG_ERROR);
+            }
+          }
+          $file['fid'] = $handler->save()->fid;
+        }
+      }
+    }
+  }
+}
+
+/**
  * The brightcove_media_video_file_formatter view callback.
  *
  * @param $file
@@ -672,45 +709,6 @@ function brightcove_media_media_element_process(&$element, &$form_state) {
     form_set_value($element, $element['#value'], $form_state);
   }
   return $element;
-}
-
-/**
- * Implements hook_node_presave().
- * (needed for media gallery)
- *
- * @param $node
- */
-function brightcove_media_node_presave($node) {
-  global $user;
-  if (isset($node->media_gallery_media[LANGUAGE_NONE])) {
-    foreach ($node->media_gallery_media[LANGUAGE_NONE] as &$file) {
-      if (isset($file['fid']) && strpos($file['fid'], 'v') === 0) {
-        $video_id = substr($file['fid'], 1);
-        $candidates = file_load_multiple(array(),
-                                         array('uri' => "brightcove://{$video_id}"));
-        if (count($candidates)) {
-          $file['fid'] = array_shift($candidates)->fid;
-        }
-        else {
-          $handler = new MediaInternetBrightcoveHandler($video_id);
-          if (!isset($_SESSION['brightcove']["video_just_uploaded_{$user->uid}"])) {
-            $bc = brightcove_initialize();
-            try {
-              $result = $bc->find('find_video_by_id', $video_id);
-              if (count($result)) {
-                $_SESSION['brightcove']["selected_video_{$user->uid}"] = (object)$result;
-              }
-            }
-            catch (Exception $e) {
-              watchdog('brightcove', 'Retrieving media list failed.', array(),
-                       WATCHDOG_ERROR);
-            }
-          }
-          $file['fid'] = $handler->save()->fid;
-        }
-      }
-    }
-  }
 }
 
 /**
