@@ -88,7 +88,6 @@
    * @param status
    */
   Drupal.ajax.prototype.commands.brightcove_media_upload = function (ajax, response, status) {
-    console.log(response);
     $("input[name='submitted-video']").val(response.data.uri);
     Drupal.media.browser.selectMedia([{uri: response.data.uri}]);
     $('#bc-filter-form .form-actions #edit-submit').trigger('click');

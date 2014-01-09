@@ -68,15 +68,11 @@
   };
 
   Drupal.brightcove.library.prototype.scrollUpdater = function (e){
-    console.log('e: ' + e);
     if (!e.data.loading) {
       var scrollbox = $('#scrollbox');
       var scrolltop = scrollbox.attr('scrollTop');
-      console.log('scrolltop: ' + scrolltop);
       var scrollheight = scrollbox.attr('scrollHeight');
-      console.log('scrollheight: ' + scrollheight);
       var windowheight = scrollbox.attr('clientHeight');
-      console.log('windowheight: ' + windowheight);
       var scrolloffset = 20;
 
       if(scrolltop >= (scrollheight - (windowheight + scrolloffset))) {
