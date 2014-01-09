@@ -117,9 +117,6 @@ function brightcove_media_theme($existing, $type, $theme, $path) {
     'brightcove_media_playlist_browser_form' => array(
       'render element' => 'form',
     ),
-    'brightcove_media_image' => array(
-      'render element' => 'elements',
-    ),
   );
 }
 
@@ -196,8 +193,7 @@ function brightcove_media_node_presave($node) {
     foreach ($node->media_gallery_media[LANGUAGE_NONE] as &$file) {
       if (isset($file['fid']) && strpos($file['fid'], 'v') === 0) {
         $video_id = substr($file['fid'], 1);
-        $candidates = file_load_multiple(array(),
-                                         array('uri' => "brightcove://{$video_id}"));
+        $candidates = file_load_multiple(array(), array('uri' => "brightcove://{$video_id}"));
         if (count($candidates)) {
           $file['fid'] = array_shift($candidates)->fid;
         }
@@ -225,15 +221,11 @@ function brightcove_media_node_presave($node) {
 
 /**
  * The brightcove_media_video_file_formatter view callback.
- *
- * @param $file
- * @param $display
- * @param $langcode
- * @return array|null
  */
 function brightcove_media_file_formatter_video_view($file, $display, $langcode) {
   $scheme = file_uri_scheme($file->uri);
-  if ($scheme == 'brightcove') {
+  // WYSIWYG does not yet support video inside a running editor instance.
+  if ($scheme == 'brightcove' && empty($file->override['wysiwyg'])) {
     $element = array(
       '#theme' => 'brightcove_field_embed',
       '#type' => $scheme,
@@ -265,15 +257,11 @@ function brightcove_media_file_formatter_video_view($file, $display, $langcode) 
 
 /**
  * The brightcove_media_playlist_file_formatter view callback.
- *
- * @param $file
- * @param $display
- * @param $langcode
- * @return array|null
  */
 function brightcove_media_file_formatter_playlist_view($file, $display, $langcode) {
   $scheme = file_uri_scheme($file->uri);
-  if ($scheme == 'brightcove-playlist') {
+  // WYSIWYG does not yet support video inside a running editor instance.
+  if ($scheme == 'brightcove-playlist' && empty($file->override['wysiwyg'])) {
     $element = array(
       '#theme' => 'brightcove_field_embed',
       '#type' => $scheme,
@@ -305,27 +293,48 @@ function brightcove_media_file_formatter_playlist_view($file, $display, $langcod
 
 /**
  * The brightcove_media_image file formatter view callback.
- *
- * @param $file
- * @param $display
- * @param $langcode
- * @return array|null
  */
 function brightcove_media_file_formatter_image_view($file, $display, $langcode) {
   $scheme = file_uri_scheme($file->uri);
   if ($scheme == 'brightcove' || $scheme == 'brightcove-playlist') {
     $video = NULL;
     $id = parse_url($file->uri, PHP_URL_HOST);
+
+    //
     if ($scheme == 'brightcove') {
       $video = brightcove_video_load($id);
     }
     elseif ($scheme == 'brightcove-playlist') {
       $video = brightcove_playlist_load($id);
     }
-    $element = array(
-      '#theme' => 'brightcove_media_image',
-      '#video' => $video
-    );
+
+    //
+    $path = NULL;
+    if (isset($video->videoStillURL)) {
+      $path = brightcove_remote_image($video->videoStillURL);
+    }
+    else {
+      $path = brightcove_get_default_image();
+    }
+
+    //
+    if (empty($display['settings']['image_style'])) {
+      $element = array(
+        '#theme' => 'image',
+        '#path' => $path,
+      );
+    }
+    else {
+      $styled_path = image_style_path($display['settings']['image_style'], $path);
+      $style = image_style_load($display['settings']['image_style']);
+      image_style_create_derivative($style, $path, $styled_path);
+
+      $element = array(
+        '#theme' => 'image_style',
+        '#path' => $path,
+        '#style_name' => $display['settings']['image_style'],
+      );
+    }
 
     return $element;
   }
@@ -334,43 +343,7 @@ function brightcove_media_file_formatter_image_view($file, $display, $langcode) 
 }
 
 /**
- * The brightcove_media_image file formatter theme function.
- *
- * @param $variables
- * @return null
- */
-function theme_brightcove_media_image($variables) {
-  $output = NULL;
-  $elements = $variables['elements'];
-  $image_type = isset($variables['#brightcove_image_type']) ? $elements['#brightcove_image_type'] : 'thumbnailURL';
-  $image_style = isset($elements['#brightcove_image_style']) ? $elements['#brightcove_image_style'] : 'thumbnail';
-
-  if (isset($elements['#video'])) {
-    $destination = NULL;
-
-    if (isset($elements['#video']->$image_type)) {
-      $destination = brightcove_remote_image($elements['#video']->$image_type);
-    }
-    else {
-      $destination = brightcove_get_default_image();
-    }
-
-    $styled_path = image_style_path($image_style, $destination);
-    $style = image_style_load($image_style);
-    image_style_create_derivative($style, $destination, $styled_path);
-    $output = theme('image', array('path' => $styled_path));
-  }
-
-  return $output;
-}
-
-/**
  * The brightcove_media_video file formatter settings callback.
- *
- * @param $form
- * @param $form_state
- * @param $settings
- * @return array
  */
 function brightcove_media_file_formatter_video_settings($form, $form_state, $settings) {
   $element = array();
@@ -395,11 +368,6 @@ function brightcove_media_file_formatter_video_settings($form, $form_state, $set
 
 /**
  * The brightcove_media_image file formatter settings callback.
- *
- * @param $form
- * @param $form_state
- * @param $settings
- * @return array
  */
 function brightcove_media_file_formatter_image_settings($form, $form_state, $settings) {
   $element = array();
@@ -444,10 +412,6 @@ function brightcove_media_upload_form($form, &$form_state) {
 
 /**
  * Filter form for brightcove media video browser.
- *
- * @param $form
- * @param $form_state
- * @return array
  */
 function brightcove_media_browser_filter_form($form, &$form_state) {
   $form['searchform'] = array(
