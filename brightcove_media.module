@@ -226,6 +226,8 @@ function brightcove_media_file_formatter_video_view($file, $display, $langcode) 
   $scheme = file_uri_scheme($file->uri);
   // WYSIWYG does not yet support video inside a running editor instance.
   if ($scheme == 'brightcove' && empty($file->override['wysiwyg'])) {
+    $path = brightcove_get_experiences_js_url();
+
     $element = array(
       '#theme' => 'brightcove_field_embed',
       '#type' => $scheme,
@@ -233,7 +235,7 @@ function brightcove_media_file_formatter_video_view($file, $display, $langcode) 
       '#player' => variable_get('brightcove_player_default', ''),
       '#attached' => array(
         'js' => array(
-          'http://admin.brightcove.com/js/BrightcoveExperiences.js' => array(
+          $path => array(
             'type' => 'external',
           ),
         ),
@@ -262,6 +264,8 @@ function brightcove_media_file_formatter_playlist_view($file, $display, $langcod
   $scheme = file_uri_scheme($file->uri);
   // WYSIWYG does not yet support video inside a running editor instance.
   if ($scheme == 'brightcove-playlist' && empty($file->override['wysiwyg'])) {
+    $path = brightcove_get_experiences_js_url();
+
     $element = array(
       '#theme' => 'brightcove_field_embed',
       '#type' => $scheme,
@@ -269,7 +273,7 @@ function brightcove_media_file_formatter_playlist_view($file, $display, $langcod
       '#player' => variable_get('brightcove_player_default', ''),
       '#attached' => array(
         'js' => array(
-          'http://admin.brightcove.com/js/BrightcoveExperiences.js' => array(
+          $path => array(
             'type' => 'external',
           ),
         ),

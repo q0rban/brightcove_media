@@ -39,7 +39,9 @@ class MediaBrightcoveVideoStreamWrapper extends MediaReadOnlyStreamWrapper {
     // Parse the video id.
     $video_id = $this->getVideoID();
     if (!is_null($video_id) && !is_null($player)) {
-      return url('http://c.brightcove.com/services/viewer/federated_f9', array(
+      $path = brightcove_get_viewer_url();
+
+      return url($path, array(
           'query' => array(
             'playerID' => $player->player_id,
             'playerKey' => $player->player_key,

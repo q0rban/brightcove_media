@@ -38,7 +38,10 @@ class MediaBrightcovePlaylistStreamWrapper extends MediaReadOnlyStreamWrapper {
       // @todo find out how to detect this url in a nice way, it might break
       //   any time
       $player = brightcove_default_player();
-      return url('http://c.brightcove.com/services/viewer/federated_f9', array(
+      if (!is_null($video_id) && !is_null($player)) {
+        $path = brightcove_get_viewer_url();
+        
+        return url($path, array(
           'query' => array(
             'playerID' => $player->player_id,
             'playerKey' => $player->player_key,
@@ -47,6 +50,7 @@ class MediaBrightcovePlaylistStreamWrapper extends MediaReadOnlyStreamWrapper {
             '@videoPlayer' => $video_id,
           ),
         ));
+      }
     }
     return NULL;
   }
