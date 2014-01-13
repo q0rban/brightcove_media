@@ -76,33 +76,34 @@ class MediaBrightcoveStreamWrapper extends MediaReadOnlyStreamWrapper {
   function getLocalThumbnailPath() {
     $video_id = $this->getVideoID();
     $thumbnail_path = 'public://media-brightcove/' . $video_id . '.jpg';
-    $default_path = 'public://media-brightcove/default.jpg';
 
-    if (!file_exists($thumbnail_path)) {
-      $dirname = drupal_dirname($thumbnail_path);
-      file_prepare_directory($dirname, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
-      $original_path = $this->getOriginalThumbnailPath();
+    // Return with the video thumbnail path if the file exists.
+    if (file_exists($thumbnail_path)) {
+      return $thumbnail_path;
+    }
 
-      // If a thumbnail can be identified, download it.
-      if (!empty($original_path)) {
-        $response = drupal_http_request($original_path);
-        if (!empty($response->data)) {
-          file_unmanaged_save_data($response->data, $thumbnail_path, FILE_EXISTS_ERROR);
-        }
-      }
-      // If there was no thumbnail obtained, use a default icon.
-      else {
-        if (!file_exists($default_path)) {
-          $bc_default_thumbnail = variable_get('brightcove_default_thumbnail', brightcove_get_default_image());
-          $args = new StdClass();
-          $args->filemime = $this->getMimeType(NULL);
-          file_unmanaged_copy(file_icon_path($args, $bc_default_thumbnail), $default_path, FILE_EXISTS_ERROR);
-        }
+    // Prepare the directory for the thumbnails.
+    $thumbnail_directory_name = drupal_dirname($thumbnail_path);
+    file_prepare_directory($thumbnail_directory_name, FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS);
 
-        return $default_path;
+    $original_path = $this->getOriginalThumbnailPath();
+    // Try to download the OriginalThumbnail.
+    if (!empty($original_path)) {
+      $response = drupal_http_request($original_path);
+      if (!empty($response->data)) {
+        file_unmanaged_save_data($response->data, $thumbnail_path, FILE_EXISTS_ERROR);
+        return $thumbnail_path;
       }
     }
 
-    return $thumbnail_path;
-   }
+    // If there was no thumbnail obtained, use a default icon.
+    $default_path = 'public://media-brightcove/default.jpg';
+    if (!file_exists($default_path)) {
+      // Save a copy from the default image under files folder.
+      $bc_default_thumbnail = variable_get('brightcove_default_thumbnail', brightcove_get_default_image());
+      file_unmanaged_copy($bc_default_thumbnail, $default_path, FILE_EXISTS_REPLACE);
+    }
+
+    return $default_path;
+  }
 }
