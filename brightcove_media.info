@@ -3,7 +3,7 @@ description = Integrates brightcove videos with the media module
 core = 7.x
 
 dependencies[] = brightcove
-dependencies[] = media
+dependencies[] = media (>=7.x-2.x)
 dependencies[] = brightcove_field
 dependencies[] = media_internet
 
@@ -12,10 +12,3 @@ files[] = includes/MediaInternetBrightcoveHandler.inc
 files[] = includes/MediaBrowserBrightcoveVideo.inc
 files[] = includes/MediaBrightcovePlaylistStreamWrapper.inc
 files[] = includes/MediaBrowserBrightcovePlaylist.inc
-
-; Information added by drupal.org packaging script on 2013-10-11
-version = "7.x-4.0-alpha2+1-dev"
-core = "7.x"
-project = "brightcove"
-datestamp = "1381494257"
-
