@@ -6,6 +6,7 @@ dependencies[] = brightcove
 dependencies[] = media (>=7.x-2.x)
 dependencies[] = brightcove_field
 dependencies[] = media_internet
+dependencies[] = file_entity
 
 files[] = includes/MediaBrightcoveVideoStreamWrapper.inc
 files[] = includes/MediaInternetBrightcoveHandler.inc
