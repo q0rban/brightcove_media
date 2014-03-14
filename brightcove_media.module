@@ -179,7 +179,9 @@ function brightcove_media_file_type_alter(&$types, $file) {
 function brightcove_media_file_presave($file) {
   if (strpos($file->filemime, 'brightcove') && $file->filename == basename($file->uri)) {
     $bc_file = brightcove_video_load($file->filename);
-    $file->filename = $bc_file->name;
+    if (isset($bc_file->name)) {
+      $file->filename = $bc_file->name;
+    }
   }
 }
 
