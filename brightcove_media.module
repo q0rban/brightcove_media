@@ -694,12 +694,13 @@ function ajax_brightcove_media_upload_callback($form, $form_state) {
   // Make sure it is not set, might be needed if a user changes mind after upload and wants to upload another.
   unset($_SESSION['brightcove']["video_just_uploaded_{$user->uid}"]);
 
-  $video = _brightcove_upload_form_callback($form, $form_state);
-  if (is_array($video) || is_bool($video)) {
-    return $video;
+  $video_id = _brightcove_upload_form_callback($form, $form_state);
+  if (empty($video_id) || is_bool($video_id) || !is_scalar($video_id)) {
+    return $video_id;
   }
 
-  $uri = file_stream_wrapper_uri_normalize("brightcove://{$video->id}");
+  $video = brightcove_video_load($video_id);
+  $uri = file_stream_wrapper_uri_normalize("brightcove://{$video_id}");
   $file = file_uri_to_object($uri);
   $file->filename = $video->name;
   $file->filemime = 'media/brightcove';
