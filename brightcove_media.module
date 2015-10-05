@@ -6,6 +6,8 @@
  * Media module.
  */
 
+define('BRIGHTCOVE_MEDIA_SESSION_VALUE_NAME_UPLOADED', 'video_just_uploaded');
+define('BRIGHTCOVE_MEDIA_SESSION_VALUE_NAME_SELECTED', 'selected_video');
 
 /**
  * Implements hook_menu().
@@ -190,7 +192,6 @@ function brightcove_media_file_presave($file) {
  * (needed for media gallery)
  */
 function brightcove_media_node_presave($node) {
-  global $user;
   if (isset($node->media_gallery_media[LANGUAGE_NONE])) {
     foreach ($node->media_gallery_media[LANGUAGE_NONE] as &$file) {
       if (isset($file['fid']) && strpos($file['fid'], 'v') === 0) {
@@ -201,12 +202,12 @@ function brightcove_media_node_presave($node) {
         }
         else {
           $handler = new MediaInternetBrightcoveHandler($video_id);
-          if (!isset($_SESSION['brightcove']["video_just_uploaded_{$user->uid}"])) {
+          if (!_brightcove_media_session_value_get(BRIGHTCOVE_MEDIA_SESSION_VALUE_NAME_UPLOADED)) {
             $bc = brightcove_initialize();
             try {
               $result = $bc->find('find_video_by_id', $video_id);
               if (count($result)) {
-                $_SESSION['brightcove']["selected_video_{$user->uid}"] = (object)$result;
+                _brightcove_media_session_value_set(BRIGHTCOVE_MEDIA_SESSION_VALUE_NAME_SELECTED, (object) $result);
               }
             }
             catch (Exception $e) {
@@ -551,8 +552,6 @@ function brightcove_media_browser_form_submit($form, &$form_state) {
  * @return JSON list of available brightcove vieos.
  */
 function brightcove_media_list() {
-  global $user;
-
   module_load_include('browser.inc', 'media', 'includes/media');
 
   $default_items_per_page = 20;
@@ -647,7 +646,6 @@ function brightcove_media_list() {
  * @return mixed
  */
 function brightcove_media_media_element_process(&$element, &$form_state) {
-  global $user;
   if (isset($element['#value']['fid']) &&
       strpos($element['#value']['fid'], 'v') === 0
   ) {
@@ -659,13 +657,13 @@ function brightcove_media_media_element_process(&$element, &$form_state) {
     }
     else {
       $handler = new MediaInternetBrightcoveHandler($video_id);
-      if (!isset($_SESSION['brightcove']["video_just_uploaded_{$user->uid}"])) {
+      if (!_brightcove_media_session_value_get(BRIGHTCOVE_MEDIA_SESSION_VALUE_NAME_UPLOADED)) {
         $bc = brightcove_initialize();
         try {
           $result = $bc->find('find_video_by_id', $video_id);
           if (count($result)) {
             $file = (object)$result;
-            $_SESSION['brightcove']["selected_video_{$user->uid}"] = $file;
+            _brightcove_media_session_value_set(BRIGHTCOVE_MEDIA_SESSION_VALUE_NAME_SELECTED, $file);
           }
         }
         catch (Exception $e) {
@@ -689,10 +687,9 @@ function brightcove_media_media_element_process(&$element, &$form_state) {
  * @return Validated form with messages
  */
 function ajax_brightcove_media_upload_callback($form, $form_state) {
-  global $user;
-
-  // Make sure it is not set, might be needed if a user changes mind after upload and wants to upload another.
-  unset($_SESSION['brightcove']["video_just_uploaded_{$user->uid}"]);
+  // Make sure it is not set, might be needed if a user changes mind after
+  // upload and wants to upload another.
+  _brightcove_media_session_value_set(BRIGHTCOVE_MEDIA_SESSION_VALUE_NAME_UPLOADED, NULL);
 
   $video_id = _brightcove_upload_form_callback($form, $form_state);
   if (empty($video_id) || is_bool($video_id) || !is_scalar($video_id)) {
@@ -710,7 +707,7 @@ function ajax_brightcove_media_upload_callback($form, $form_state) {
   }
   media_browser_build_media_item($file);
 
-  $_SESSION['brightcove']["video_just_uploaded_{$user->uid}"] = $file;
+  _brightcove_media_session_value_set(BRIGHTCOVE_MEDIA_SESSION_VALUE_NAME_UPLOADED, $file);
 
   $commands = array();
   $commands[] = ajax_command_brightcove_media_upload($file);
@@ -749,9 +746,7 @@ function brightcove_media_file_uri_to_object($uri, $use_existing = FALSE) {
     }
   }
   if (!isset($file)) {
-    global $user;
     $uri = file_stream_wrapper_uri_normalize($uri);
-    $wrapper = file_stream_wrapper_get_instance_by_uri($uri);
     $file = new StdClass;
     // This is gagged because some uris will not support it.
     $file->filesize = @filesize($uri);
@@ -760,17 +755,15 @@ function brightcove_media_file_uri_to_object($uri, $use_existing = FALSE) {
     $file->is_new = TRUE;
     $file->uri = $uri;
     $file->filemime = file_get_mimetype($uri);
-    $file->uid = $user->uid;
-    if (isset($_SESSION['brightcove']["video_just_uploaded_{$user->uid}"])) {
-      $uploaded_video = $_SESSION['brightcove']["video_just_uploaded_{$user->uid}"];
+    $file->uid = $GLOBALS['user']->uid;
+    if ($uploaded_video = _brightcove_media_session_value_get(BRIGHTCOVE_MEDIA_SESSION_VALUE_NAME_UPLOADED)) {
       $file->filename = $uploaded_video->filename;
-      unset($_SESSION['brightcove']["video_just_uploaded_{$user->uid}"]);
+      _brightcove_media_session_value_set(BRIGHTCOVE_MEDIA_SESSION_VALUE_NAME_UPLOADED, NULL);
     }
     else {
-      if (isset($_SESSION['brightcove']["selected_video_{$user->uid}"])) {
-        $selected_video = $_SESSION['brightcove']["selected_video_{$user->uid}"];
+      if ($selected_video = _brightcove_media_session_value_get(BRIGHTCOVE_MEDIA_SESSION_VALUE_NAME_SELECTED)) {
         $file->filename = $selected_video->name;
-        unset($_SESSION['brightcove']["selected_video_{$user->uid}"]);
+        _brightcove_media_session_value_set(BRIGHTCOVE_MEDIA_SESSION_VALUE_NAME_SELECTED, NULL);
       }
       else {
         $file->filename = basename($uri);
@@ -871,4 +864,65 @@ function brightcove_media_playlist_list() {
   drupal_add_js(array('brightcove_playlist' => array('files' => $files)), 'setting');
   drupal_json_output($media);
   exit;
+}
+
+/**
+ * Helper function to retrieve a value from the session.
+ *
+ * TODO: This function should be removed and replaced with another storage
+ * method that does not rely on the session. This is only a shim at this point
+ * to support existing code.
+ *
+ * @param string $name
+ *   The name of the value to retrieve from the session.
+ *
+ * @return mixed
+ *   The value stored in the session, or NULL if not found.
+ */
+function _brightcove_media_session_value_get($name) {
+  $name = _brightcove_media_session_value_name_personalize($name);
+  return isset($_SESSION['brightcove_media'][$name])
+    ? $_SESSION['brightcove_media'][$name] : NULL;
+}
+
+/**
+ * Helper function to set a value to the current session.
+ *
+ * TODO: This function should be removed and replaced with another storage
+ * method that does not rely on the session. This is only a shim at this point
+ * to support existing code.
+ *
+ * @param string $name
+ *   The name of the value to store in the session.
+ * @param mixed $value
+ *   The value to store in the session.
+ */
+function _brightcove_media_session_value_set($name, $value) {
+  $name = _brightcove_media_session_value_name_personalize($name);
+  // If value is NULL, assume the implementer would like to unset the value.
+  if ($value === NULL) {
+    unset($_SESSION['brightcove_media'][$name]);
+  }
+  else {
+    $_SESSION['brightcove_media'][$name] = $value;
+  }
+}
+
+/**
+ * Helper function to personalize a session value's name.
+ *
+ * @param string $name
+ *   The name of the session value to personalize.
+ *
+ * @return string
+ *   The personalized name.
+ *
+ * @throws Exception
+ *   When the global user object is not set.
+ */
+function _brightcove_media_session_value_name_personalize($name) {
+  if (!isset($GLOBALS['user']->uid)) {
+    throw new Exception('Unable to personalize the session value name.');
+  }
+  return $name . '_' . $GLOBALS['user']->uid;
 }
