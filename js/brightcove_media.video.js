@@ -12,8 +12,10 @@
   Drupal.behaviors.brightcoveVideoBrowser = {
     attach: function (context, settings) {
       Drupal.brightcove.library.video = new Drupal.brightcove.library(Drupal.settings.media.browser.brightcove);
-      $('#media-browser-tabset', context).bind('tabsshow', function (event, ui) {
-        if (ui.tab.hash === '#media-tab-brightcove') {
+      $('#media-browser-tabset', context).bind('tabscreate tabsshow tabsactivate', function (event, ui) {
+        var panel = event.type == 'tabsactivate' ? ui.newPanel : ui.panel;
+
+        if (typeof panel != 'undefined' && panel.selector === '#media-tab-brightcove') {
           // Prevent reloading of media list on tabselect if already loaded in media list
           if (!Drupal.brightcove.library.video.loaded) {
             var params = {};
@@ -21,7 +23,7 @@
               params[p] = Drupal.settings.media.browser.brightcove[p];
             }
 
-            Drupal.brightcove.library.video.start($(ui.panel), params);
+            Drupal.brightcove.library.video.start($(panel), params);
             $('#scrollbox').bind('scroll', Drupal.brightcove.library.video, Drupal.brightcove.library.video.scrollUpdater);
             Drupal.brightcove.library.video.loaded = true;
           }
