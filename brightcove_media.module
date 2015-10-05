@@ -436,12 +436,17 @@ function brightcove_media_browser_filter_form($form, &$form_state) {
   $form['searchform']['search'] = array(
     '#type' => 'radios',
     '#title' => t('Search in'),
-    '#options' => array('name' => t('Names and descriptions'), 'tags' => t('Tags: at least one of these'), 'and_tags' => t('Tags: all of these')),
+    '#options' => array(
+      'name' => t('Names and descriptions'),
+      'tags' => t('Tags: at least one of these'),
+      'and_tags' => t('Tags: all of these'),
+      'id' => t('Video ID'),
+    ),
     '#default_value' => 'name',
     '#attributes' => array(
       'class' => array('search-radio'),
     ),
-    '#description' => t('"Names and descriptions" searches in Video name, short and long descriptions. Tags searches in Video associated tags.'),
+    '#description' => t('"Names and descriptions" searches in Video name, short and long descriptions. "Tags" searches in Video associated tags. "Video ID" searches for a specific video by ID.'),
   );
   $form['searchform']['filter'] = array(
     '#type' => 'button',
@@ -562,6 +567,10 @@ function brightcove_media_list() {
   $bc_find_params = array();
   if (isset($params['filter'])) {
     switch ($params['filter']['search']) {
+      case 'id':
+        $method = 'find_videos_by_ids';
+        $bc_find_params = array('video_ids' => $params['filter']['keywords']);
+        break;
       case 'tags':
         $method = 'find_videos_by_tags';
         $bc_find_params = array('or_tags' => $params['filter']['keywords']);
