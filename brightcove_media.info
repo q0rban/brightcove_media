@@ -2,7 +2,7 @@ name = Brightcove media integration
 description = Integrates brightcove videos with the media module
 core = 7.x
 
-dependencies[] = brightcove (>=7.x-5.x)
+dependencies[] = brightcove (>=7.x-5.x, <7.x-6.x)
 dependencies[] = media (>=7.x-2.x)
 dependencies[] = brightcove_field
 dependencies[] = media_internet
