@@ -34,7 +34,6 @@
    * Appends more media onto the list
    */
   Drupal.brightcove.library.prototype.loadMedia = function () {
-    console.log(this);
     var that = this;
 
     $('#media-empty-message').remove();
