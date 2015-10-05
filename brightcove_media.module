@@ -307,7 +307,6 @@ function brightcove_media_file_formatter_image_view($file, $display, $langcode) 
     $video = NULL;
     $id = parse_url($file->uri, PHP_URL_HOST);
 
-    //
     if ($scheme == 'brightcove') {
       $video = brightcove_video_load($id);
     }
@@ -315,7 +314,6 @@ function brightcove_media_file_formatter_image_view($file, $display, $langcode) 
       $video = brightcove_playlist_load($id);
     }
 
-    //
     $path = NULL;
     if (isset($video->videoStillURL)) {
       $path = brightcove_remote_image($video->videoStillURL);
@@ -324,7 +322,6 @@ function brightcove_media_file_formatter_image_view($file, $display, $langcode) 
       $path = brightcove_get_default_image();
     }
 
-    //
     if (empty($display['settings']['image_style'])) {
       $element = array(
         '#theme' => 'image',
@@ -635,7 +632,6 @@ function brightcove_media_list() {
 
   drupal_add_js(array('brightcove' => array('files' => $files)), 'setting');
   drupal_json_output($media);
-  exit;
 }
 
 /**
@@ -863,7 +859,6 @@ function brightcove_media_playlist_list() {
 
   drupal_add_js(array('brightcove_playlist' => array('files' => $files)), 'setting');
   drupal_json_output($media);
-  exit;
 }
 
 /**

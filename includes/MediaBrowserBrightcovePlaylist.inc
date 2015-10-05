@@ -22,7 +22,6 @@ class MediaBrowserBrightcovePlaylist extends MediaBrowserPlugin {
    * Implements MediaBrowserPlugin::view().
    */
   public function view() {
-    $media_path = drupal_get_path('module', 'media');
     $bcpath = drupal_get_path('module', 'brightcove_media');
 
     return array(
