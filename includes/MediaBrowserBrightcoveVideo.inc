@@ -48,8 +48,8 @@ class MediaBrowserBrightcoveVideo extends MediaBrowserPlugin {
           $bcpath . '/brightcove_media.css',
         ),
       ),
-      // If the #form and #markup parameters are not empty the media module will not
-      // render fake submit and cancel buttons.
+      // If the #form and #markup parameters are not empty the media module will
+      // not render the fake submit button.
       '#form' => array(FALSE),
       '#markup' => '<div id="container"><div id="scrollbox">' . $upload_form . $filter_form . '</div></div>',
     );

@@ -40,8 +40,6 @@ class MediaBrowserBrightcovePlaylist extends MediaBrowserPlugin {
           $bcpath . '/brightcove_media.css',
         ),
       ),
-      // If the #form and #markup parameters are not empty the media module will not
-      // render fake submit and cancel buttons.
       'form' => drupal_get_form('brightcove_media_playlist_browser_form'),
     );
   }

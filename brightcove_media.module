@@ -466,15 +466,6 @@ function brightcove_media_browser_filter_form($form, &$form_state) {
     '#submit' => array('brightcove_media_browser_form_submit'),
     '#value' => t('Submit'),
   );
-  $form['actions']['cancel'] = array(
-    '#type' => 'link',
-    '#title' => t('Cancel'),
-    '#href' => '',
-    '#attributes' => array(
-      'class' => array('button', 'button-no', 'fake-cancel', 'brightcove')
-    ),
-    '#weight' => 100,
-  );
 
   return $form;
 }
