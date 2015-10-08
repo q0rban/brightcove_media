@@ -250,7 +250,7 @@ function brightcove_media_file_formatter_video_view($file, $display, $langcode) 
     }
     foreach (array('width', 'height') as $setting) {
       if (isset($display['settings'][$setting]) && $display['settings'][$setting]) {
-        $element['#params'][$setting] = $display['settings'][$setting];
+        $element['#' . $setting] = $display['settings'][$setting];
       }
     }
 
@@ -288,7 +288,7 @@ function brightcove_media_file_formatter_playlist_view($file, $display, $langcod
     }
     foreach (array('width', 'height') as $setting) {
       if (isset($display['settings'][$setting]) && $display['settings'][$setting]) {
-        $element['#params'][$setting] = $display['settings'][$setting];
+        $element['#' . $setting] = $display['settings'][$setting];
       }
     }
 
