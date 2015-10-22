@@ -35,9 +35,6 @@ class MediaBrowserBrightcovePlaylist extends MediaBrowserPlugin {
           $bcpath . '/js/brightcove_media.js',
           $bcpath . '/js/brightcove_media.playlist.js',
         ),
-        'css' => array(
-          $bcpath . '/brightcove_media.css',
-        ),
       ),
       'form' => drupal_get_form('brightcove_media_playlist_browser_form'),
     );
