@@ -35,7 +35,9 @@ class MediaBrightcoveVideoStreamWrapper extends MediaReadOnlyStreamWrapper {
    */
   public function interpolateUrl() {
     // Load the default brightcove player.
-    $player = brightcove_default_player();
+    $client = brightcove_client_load_or_default();
+    $player = brightcove_get_default_player($client->bcid);
+
     // Parse the video id.
     $video_id = $this->getVideoID();
     if (!is_null($video_id) && !is_null($player)) {
@@ -43,8 +45,7 @@ class MediaBrightcoveVideoStreamWrapper extends MediaReadOnlyStreamWrapper {
 
       return url($path, array(
           'query' => array(
-            'playerID' => $player->player_id,
-            'playerKey' => $player->player_key,
+            'playerID' => $player,
             'isVid' => 'true',
             'isUI' => 'true',
             '@videoPlayer' => $video_id,
