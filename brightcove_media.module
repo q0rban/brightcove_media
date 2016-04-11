@@ -615,43 +615,44 @@ function brightcove_media_list() {
   foreach ($bc_find_params as $key => $param) {
     $cid .= ":{$key}:{$param}";
   }
+  // Create classes prior to retreiving cache so video object can be classed correctly.
+  $client = brightcove_client_load_or_default();
+  list($cms,,) = _brightcove_create_classes($client);
   $result = brightcove_cache_get($cid);
 
   if (!$result) {
     try {
-      $client = brightcove_client_load_or_default();
-      list($cms,,) = _brightcove_create_classes($client);
-      $result = $cms->listVideos($search, $sort, $limit, $offset);
+      $result = $cms->listVideos($search, $sort, $limit, $start);
       brightcove_cache_set($cid, $result);
     }
     catch (Exception $e) {
       watchdog('brightcove', 'Retrieving media list failed.', array(),
         WATCHDOG_ERROR);
     }
-    if (count($result)) {
-      foreach ($result as $video) {
-        $video_id = $video->getId();
-        $uri = file_stream_wrapper_uri_normalize("brightcove://$video_id");
-        $file = file_uri_to_object($uri);
-        $file->filename = $video->getName();
-        $file->type = 'video';
-        if (!isset($file->fid)) {
-          $file->fid = 0;
-        }
-        media_browser_build_media_item($file);
-        $images = $video->getImages();
-        $src = is_object($images['thumbnail']) ? $images['thumbnail']->getSrc() : '';
-
-        $file->preview = l($file->preview, 'media/browser', array(
-          'html' => TRUE,
-          'attributes' => array(
-            'data-uri' => $uri,
-          ),
-          'query' => array('render' => 'media-popup', 'uri' => $uri),
-        ));
-        $files[$uri] = $file;
-        $media[] = $file;
+  }
+  if (count($result)) {
+    foreach ($result as $video) {
+      $video_id = $video->getId();
+      $uri = file_stream_wrapper_uri_normalize("brightcove://$video_id");
+      $file = file_uri_to_object($uri);
+      $file->filename = $video->getName();
+      $file->type = 'video';
+      if (!isset($file->fid)) {
+        $file->fid = 0;
       }
+      media_browser_build_media_item($file);
+      $images = $video->getImages();
+      $src = is_object($images['thumbnail']) ? $images['thumbnail']->getSrc() : '';
+
+      $file->preview = l($file->preview, 'media/browser', array(
+        'html' => TRUE,
+        'attributes' => array(
+          'data-uri' => $uri,
+        ),
+        'query' => array('render' => 'media-popup', 'uri' => $uri),
+      ));
+      $files[$uri] = $file;
+      $media[] = $file;
     }
   }
   drupal_add_js(array('brightcove' => array('files' => $files)), 'setting');
