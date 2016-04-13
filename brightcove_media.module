@@ -136,6 +136,9 @@ function brightcove_media_theme($existing, $type, $theme, $path) {
   );
 }
 
+/**
+ * Implements hook_preprocess_HOOK().
+ */
 function brightcove_media_preprocess_brightcove_media_embed(&$variables) {
   $client = brightcove_client_load_or_default();
   $variables['account_id'] = $client->account_id;
@@ -579,7 +582,8 @@ function brightcove_media_list() {
   $default_items_per_page = 20;
 
   $params = drupal_get_query_parameters();
-
+  $search = NULL;
+  $sort = NULL;
   $limit = isset($params['limit']) ? $params['limit'] : $default_items_per_page;
   $start = isset($params['start']) ? ceil($params['start'] / $limit) : 0;
 
@@ -602,7 +606,7 @@ function brightcove_media_list() {
         $bc_find_params = array('text' => join(' ', explode(',', $params['filter']['keywords'])));
         break;
     }
-    if (isset($params['filter']['keywords'])) {
+    if (!empty($params['filter']['keywords'])) {
       $search = $method . urlencode($params['filter']['keywords']);
     }
   }
@@ -617,7 +621,7 @@ function brightcove_media_list() {
   }
   // Create classes prior to retreiving cache so video object can be classed correctly.
   $client = brightcove_client_load_or_default();
-  list($cms,,) = _brightcove_create_classes($client);
+  list($cms) = _brightcove_create_classes($client);
   $result = brightcove_cache_get($cid);
 
   if (!$result) {
@@ -630,9 +634,10 @@ function brightcove_media_list() {
         WATCHDOG_ERROR);
     }
   }
-  if (count($result)) {
+  if (!empty($result)) {
     foreach ($result as $video) {
       $video_id = $video->getId();
+      // Create the file object from the loaded video.
       $uri = file_stream_wrapper_uri_normalize("brightcove://$video_id");
       $file = file_uri_to_object($uri);
       $file->filename = $video->getName();
@@ -640,6 +645,7 @@ function brightcove_media_list() {
       if (!isset($file->fid)) {
         $file->fid = 0;
       }
+      // Add additional properties to file object, needed by media browser js.
       media_browser_build_media_item($file);
       $images = $video->getImages();
       $src = is_object($images['thumbnail']) ? $images['thumbnail']->getSrc() : '';
@@ -655,7 +661,9 @@ function brightcove_media_list() {
       $media[] = $file;
     }
   }
+  // @todo: This doesn't seem to be used.
   drupal_add_js(array('brightcove' => array('files' => $files)), 'setting');
+  // Output the file list for media browser.
   drupal_json_output($media);
 }
 
