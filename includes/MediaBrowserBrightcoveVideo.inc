@@ -38,7 +38,7 @@ class MediaBrowserBrightcoveVideo extends MediaBrowserPlugin {
       ),
       '#attached' => array(
         'library' => array(
-
+          array('system', 'drupal.ajax'),
         ),
         'js' => array(
           $bcpath . '/js/brightcove_media.js',
