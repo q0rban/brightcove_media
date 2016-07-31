@@ -23,17 +23,19 @@ class MediaBrowserBrightcovePlaylist extends MediaBrowserPlugin {
    */
   public function view() {
     $bcpath = drupal_get_path('module', 'brightcove_media');
-
+    // $entity_type = 'brightcove_playlist';
+    // $entity_info = entity_get_info($entity_type);
+    // $bundle = $entity_info['entity keys']['bundle'];
+    // $entity = entity_create($entity_type, array('type' => $bundle));
     return array(
       '#title' => t('Brightcove playlists'),
       '#settings' => array(
-//        'viewMode' => 'thumbnails',
         'getMediaUrl' => url('brightcove/media/playlist/list'),
       ),
       '#attached' => array(
         'js' => array(
           $bcpath . '/js/brightcove_media.js',
-          $bcpath . '/js/brightcove_media.playlist.js',
+          //$bcpath . '/js/brightcove_media.playlist.js',
         ),
       ),
       'form' => drupal_get_form('brightcove_media_playlist_browser_form'),
