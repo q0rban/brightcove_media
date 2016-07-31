@@ -115,11 +115,13 @@
       var data = {};
       data.obj = this;
       data.file = mediaFile;
-
-      var listItem = $('<li></li>').appendTo(mediaList)
+      //@todo move CSS to file.
+      listItemCss = {'display':'inline-block', 'width':'175px', 'float': 'none'}
+      var listItem = $('<li></li>').css(listItemCss).appendTo(mediaList)
         .attr('id', 'media-item-' + mediaFile.fid)
         .html(mediaFile.preview)
         .bind('click', data, this.clickFunction);
+      $('.media-item img').css('max-width', '100%');
     }
   };
 
